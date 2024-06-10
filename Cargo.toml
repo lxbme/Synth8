@@ -1,0 +1,8 @@
+[package]
+name = "retro_music_maker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dasp = { version = "0.11", features = ["signal"] }
+hound = "3.4"
