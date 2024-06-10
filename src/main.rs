@@ -1,36 +1,31 @@
-use dasp::{signal, Signal};
-use hound;
-
-
-const SAMPLE_RATE: u32 = 44100;
+use retro_music_maker::{generate_square_signal, create_wav_file_writer, write_samples_to_file};
 
 fn main() {
     let duration_secs = 2;
     let frequency = 440.0;
-    let amplitude = 0.3;
+    let filename = "square_wave.wav";
 
-    // 生成方波信号
-    let mut signal = signal::rate(SAMPLE_RATE as f64)
-        .const_hz(frequency)
-        .square();
-        //.amplify(amplitude);
-
-    // 创建WAV文件
-    let spec = hound::WavSpec {
-        channels: 1,
-        sample_rate: SAMPLE_RATE,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
+    
+    let samples = match generate_square_signal(duration_secs, frequency) {
+        Ok(samples) => samples,
+        Err(e) => panic!("Error generating signal: {}", e),
     };
-    let mut writer = hound::WavWriter::create("square_wave.wav", spec).unwrap();
+    
 
-    for _ in 0..SAMPLE_RATE * duration_secs {
-        let sample = signal.next();
-        let sample = (sample * i16::MAX as f64) as i16;
-        writer.write_sample(sample).unwrap();
-    }
+    let mut writer = match create_wav_file_writer(filename){
+        Ok(writer) => writer,
+        Err(e) => panic!("Error creating WAV file writer: {}", e),
+    };
 
-    writer.finalize().unwrap();
+    match write_samples_to_file(&mut writer, samples) {
+        Ok(_) => println!("Write samples to file successfully"),
+        Err(e) => println!("Error writing samples to file: {}", e),
+    };
+
+    match writer.finalize() {
+        Ok(_) => println!("Finalized WAV file"),
+        Err(e) => println!("Error finalizing WAV file: {}", e),
+    };
 
     println!("Generated square_wave.wav");
 }
